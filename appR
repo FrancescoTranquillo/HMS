@@ -1,0 +1,111 @@
+#
+# This is a Shiny web application. You can run the application by clicking
+# the 'Run App' button above.
+#
+# Find out more about building applications with Shiny here:
+#
+#    http://shiny.rstudio.com/
+#
+
+## app.R ##
+library(shiny)
+library(shinydashboard)
+
+header<- dashboardHeader(
+  title="Hypertension Monitoring System",
+  titleWidth = "40%",
+  # Dropdown menu for messages
+  dropdownMenu(type = "messages", badgeStatus = "success",
+               messageItem("Support Team",
+                           "This is the content of a message.",
+                           time = "5 mins"
+               ),
+               messageItem("Support Team",
+                           "This is the content of another message.",
+                           time = "2 hours"
+               ),
+               messageItem("New User",
+                           "Can I get some help?",
+                           time = "Today"
+               )
+  ),
+  
+  # Dropdown menu for notifications
+  dropdownMenu(type = "notifications", badgeStatus = "warning",
+               notificationItem(icon = icon("users"), status = "info",
+                                "5 new members joined today"
+               ),
+               notificationItem(icon = icon("warning"), status = "danger",
+                                "Resource usage near limit."
+               ),
+               notificationItem(icon = icon("shopping-cart", lib = "glyphicon"),
+                                status = "success", "25 sales made"
+               ),
+               notificationItem(icon = icon("user", lib = "glyphicon"),
+                                status = "danger", "You changed your username"
+               )
+  )
+  
+  
+)
+
+## Sidebar content
+Sidebar<-dashboardSidebar(
+  
+  # Search Form
+  sidebarSearchForm(label = "Enter a number", "searchText", "searchButton"),
+  
+  # Sidebar Menu
+  sidebarMenu(
+    menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+    menuItem("Widgets", tabName = "widgets", icon = icon("th"))
+  )
+)
+
+## Body content
+body<-dashboardBody(
+  
+  fluidRow(
+    column(11,
+           box(fileInput("file1", "Choose CSV File",
+                         accept = c(
+                           "text/csv",
+                           "text/comma-separated-values,text/plain",
+                           ".csv")
+           )
+           )
+    ),
+    column(12,
+           
+           tableOutput('file1')
+    )
+  )
+)
+
+
+ui <- dashboardPage(
+  header,
+  Sidebar,
+  body
+)
+
+server <- function(input, output) {
+  {
+    output$table <- renderTable({
+      # input$file1 will be NULL initially. After the user selects
+      # and uploads a file, it will be a data frame with 'name',
+      # 'size', 'type', and 'datapath' columns. The 'datapath'
+      # column will contain the local filenames where the data can
+      # be found.
+      inFile <- input$file1
+      
+      if (is.null(inFile))
+        return(NULL)
+      
+      read.csv(inFile$datapath, header = input$header)
+    })
+  }
+}
+
+shinyApp(ui, server)
+
