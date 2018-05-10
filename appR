@@ -8,79 +8,41 @@
 #
 
 ## app.R ##
+
 library(shiny)
 library(shinydashboard)
+library (DT)
+
 
 header<- dashboardHeader(
   title="Hypertension Monitoring System",
-  titleWidth = "40%",
-  # Dropdown menu for messages
-  dropdownMenu(type = "messages", badgeStatus = "success",
-               messageItem("Support Team",
-                           "This is the content of a message.",
-                           time = "5 mins"
-               ),
-               messageItem("Support Team",
-                           "This is the content of another message.",
-                           time = "2 hours"
-               ),
-               messageItem("New User",
-                           "Can I get some help?",
-                           time = "Today"
-               )
-  ),
-  
-  # Dropdown menu for notifications
-  dropdownMenu(type = "notifications", badgeStatus = "warning",
-               notificationItem(icon = icon("users"), status = "info",
-                                "5 new members joined today"
-               ),
-               notificationItem(icon = icon("warning"), status = "danger",
-                                "Resource usage near limit."
-               ),
-               notificationItem(icon = icon("shopping-cart", lib = "glyphicon"),
-                                status = "success", "25 sales made"
-               ),
-               notificationItem(icon = icon("user", lib = "glyphicon"),
-                                status = "danger", "You changed your username"
-               )
-  )
-  
-  
+  titleWidth = "40%"
 )
 
 ## Sidebar content
-Sidebar<-dashboardSidebar(
-  
-  # Search Form
-  sidebarSearchForm(label = "Enter a number", "searchText", "searchButton"),
-  
-  # Sidebar Menu
-  sidebarMenu(
-    menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-    menuItem("Widgets", tabName = "widgets", icon = icon("th"))
-  )
-)
+Sidebar<-dashboardSidebar(  )
+
 
 ## Body content
 body<-dashboardBody(
   
   fluidRow(
    
-           box(fileInput("file1", "Choose CSV File",
+           box(fileInput("file1", "Choose patient data",
                          accept = c(
                            "text/csv",
                            "text/comma-separated-values,text/plain",
                            ".csv")
-           
            )
-    ),
-    box(
-    tableOutput('contents')
+           ),
+           
+          box(DTOutput("dati")
+          )
+           
     )     
   )
   
-)
+
 
 
 ui <- dashboardPage(
@@ -92,35 +54,29 @@ ui <- dashboardPage(
 server <- shinyServer(function(input, output, session) {
   # added "session" because updateSelectInput requires it
   
-  
-  data <- reactive({ 
-    req(input$file1) ## ?req #  require that the input is available
-    
-    inFile <- input$file1 
-    
-    # tested with a following dataset: write.csv(mtcars, "mtcars.csv")
-    # and                              write.csv(iris, "iris.csv")
-    df <- read.csv(inFile$datapath, header = TRUE, sep = ";",
-                   dec=",")
-    
-    
-    # Update inputs (you could create an observer with both updateSel...)
-    # You can also constraint your choices. If you wanted select only numeric
-    # variables you could set "choices = sapply(df, is.numeric)"
-    # It depends on what do you want to do later on.
-    
-    #updateSelectInput(session, inputId = 'xcol', label = 'X Variable',
-    # choices = names(df), selected = names(df))
-    #updateSelectInput(session, inputId = 'ycol', label = 'Y Variable',
-    #choices = names(df), selected = names(df)[2])
-    
-    return(df)
+
+ data <- reactive({
+   
+  req(input$file1) ## ?req #  require that the input is available
+   
+    inFile <- input$file1
+
+    df <- read.csv(inFile$datapath
+                   
+  #   return(df)
+    )
   })
   
-  output$contents <- renderTable({
-    data()
-  })
+ # output$contents <- renderTable(
+   # data()
+  #)
+
+output$dati = renderDT(
+  data()
+)
 })
+
 shinyApp(ui, server)
+
 
 
