@@ -27,21 +27,21 @@ Sidebar<-dashboardSidebar(  )
 body<-dashboardBody(
   
   fluidRow(
-   
-           box(fileInput("file1", "Choose patient data",
-                         accept = c(
-                           "text/csv",
-                           "text/comma-separated-values,text/plain",
-                           ".csv")
-           )
-           ),
-           
-          box(DTOutput("dati")
-          )
-           
-    )     
-  )
-  
+    
+    box(fileInput("file1", "Choose patient data",
+                  accept = c(
+                    "text/csv",
+                    "text/comma-separated-values,text/plain",
+                    ".csv")
+    )
+    ),
+    
+    box(DTOutput("dati")
+    )
+    
+  )     
+)
+
 
 
 
@@ -54,29 +54,26 @@ ui <- dashboardPage(
 server <- shinyServer(function(input, output, session) {
   # added "session" because updateSelectInput requires it
   
-
- data <- reactive({
-   
-  req(input$file1) ## ?req #  require that the input is available
-   
+  
+  data <- reactive({
+    
+    req(input$file1) ## ?req #  require that the input is available
+    
     inFile <- input$file1
-
-    df <- read.csv(inFile$datapath
+    
+    df <- read.csv(inFile$datapath, header = TRUE, sep = ";"
                    
-  #   return(df)
+                   #   return(df)
     )
   })
   
- # output$contents <- renderTable(
-   # data()
+  # output$contents <- renderTable(
+  # data()
   #)
-
-output$dati = renderDT(
-  data()
-)
+  
+  output$dati = renderDT(
+    data()
+  )
 })
 
 shinyApp(ui, server)
-
-
-
