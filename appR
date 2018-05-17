@@ -12,6 +12,7 @@
 library(shiny)
 library(shinydashboard)
 library (DT)
+library (ggplot2)
 
 
 header<- dashboardHeader(
@@ -34,13 +35,19 @@ body<-dashboardBody(
                     "text/comma-separated-values,text/plain",
                     ".csv")
     )
+    
     ),
     
-    box(DTOutput("dati")
+    box(plotOutput("plot1"), collapsible=TRUE, collapsed = TRUE
     )
     
-  )     
-)
+  ),
+  
+  box(DTOutput("dati"), collapsible=TRUE, title = "Data"
+  )
+  
+  )
+
 
 
 
@@ -50,30 +57,3 @@ ui <- dashboardPage(
   Sidebar,
   body
 )
-
-server <- shinyServer(function(input, output, session) {
-  # added "session" because updateSelectInput requires it
-  
-  
-  data <- reactive({
-    
-    req(input$file1) ## ?req #  require that the input is available
-    
-    inFile <- input$file1
-    
-    df <- read.csv(inFile$datapath, header = TRUE, sep = ";"
-                   
-                   #   return(df)
-    )
-  })
-  
-  # output$contents <- renderTable(
-  # data()
-  #)
-  
-  output$dati = renderDT(
-    data()
-  )
-})
-
-shinyApp(ui, server)
