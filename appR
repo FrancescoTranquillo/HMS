@@ -12,10 +12,12 @@
 library(shiny)
 library(shinydashboard)
 library (DT)
+library (ggplot2)
+library (plotly)
 
 
 header<- dashboardHeader(
-  title="Hypertension Monitoring System",
+  title="SERENA",
   titleWidth = "40%"
 )
 
@@ -26,6 +28,7 @@ Sidebar<-dashboardSidebar(  )
 ## Body content
 body<-dashboardBody(
   
+  #FIRST ROW
   fluidRow(
     
     box(fileInput("file1", "Choose patient data",
@@ -33,14 +36,31 @@ body<-dashboardBody(
                     "text/csv",
                     "text/comma-separated-values,text/plain",
                     ".csv")
-    )
+                )
+        )
+  ),
+  
+  
+  #SECOND ROW
+  fluidRow(
+    
+    box(plotlyOutput("plot1"), collapsible=TRUE
     ),
     
-    box(DTOutput("dati")
-    )
-    
-  )     
-)
+    box(selectInput('xcol', 'X Variable', "", selected = ""),
+        selectInput('ycol', 'Y Variable', "", selected = ""))
+  ),
+  
+  #THIRD ROW
+  fluidRow(
+    box(DTOutput("dati"), collapsible=TRUE, title = "Data",collapsed = TRUE
+  )
+  )
+  
+  )
+
+
+
 
 
 
@@ -50,6 +70,7 @@ ui <- dashboardPage(
   Sidebar,
   body
 )
+
 
 server <- shinyServer(function(input, output, session) {
   # added "session" because updateSelectInput requires it
@@ -61,19 +82,40 @@ server <- shinyServer(function(input, output, session) {
     
     inFile <- input$file1
     
-    df <- read.csv(inFile$datapath, header = TRUE, sep = ";"
-                   
-                   #   return(df)
-    )
+    df <- read.csv(inFile$datapath, header = TRUE, sep = ";")
+    
+    
+    
+    DatesConv<-as.Date(df$Dates, format="%d/%m/%Y")
+    
+    updateSelectInput(session, inputId = 'xcol', label = 'X Variable',
+                      choices = names(df), selected = names(df))
+    updateSelectInput(session, inputId = 'ycol', label = 'Y Variable',
+                      choices = names(df), selected = names(df)[2])
+
+
+    
+    
+    
+    return(df)
+
+    
+    
+    
   })
   
-  # output$contents <- renderTable(
-  # data()
-  #)
+    output$dati = renderDT(data())
+
   
-  output$dati = renderDT(
-    data()
-  )
+    output$plot1 = renderPlotly({
+      
+      data<-data()
+      time<-as.POSIXct(strptime(data$Dates,"%d/%m/%Y"))
+      ggplotly(ggplot(data, aes( time, data$HeartRate, color=data$EMP_FiscalCode))+geom_line()+geom_point())
+  })
+  
+  
+  
 })
 
 shinyApp(ui, server)
