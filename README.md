@@ -1,5 +1,7 @@
 # Serena: a Shiny dashboard for monitoring of hypertension
 
+<img src="www/logo3.png" align="center" />
+
 
 ## Contents
 
