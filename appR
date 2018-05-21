@@ -14,69 +14,104 @@ library(shinydashboard)
 library (DT)
 library (ggplot2)
 library (plotly)
+library(reshape2)
 
-
+###### TITLE ######
 header<- dashboardHeader(
-  title="SERENA",
-  titleWidth = "40%"
+  title=tags$b("SERENA"))
+
+
+
+
+
+###### SIDEBAR #####
+Sidebar<-dashboardSidebar(
+  sidebarMenu(
+    menuItem(tags$strong("Welcome"), tabName="Welcome page", icon=icon("home"), selected= TRUE),
+    menuItem(tags$b("Employee Section"), tabName= "Employee", icon=icon("user"),
+             menuSubItem(tags$b("Temporal Trend"), tabName = "empgeneric"),
+             menuSubItem(tags$b("Specific Temporal Trend"), tabName="empspecific")
+    ),
+    menuItem(tags$b("Doctor Section"), tabName= "SP", icon = icon("user-md")),
+    menuItem(tags$b("User guide"), tabName="guide", icon=icon("info-circle")),
+    tags$img(src="logo3.png", height="auto",width="auto", style="position:absolute;bottom:0;margin:1px 10px 1px 10px;")
+  )
 )
 
-## Sidebar content
-Sidebar<-dashboardSidebar(  )
 
-
-## Body content
+ 
+ ########## BODY ##########
 body<-dashboardBody(
   
-  #FIRST ROW
-  fluidRow(
+  tabItems(
     
-    box(fileInput("file1", "Choose patient data",
-                  accept = c(
-                    "text/csv",
-                    "text/comma-separated-values,text/plain",
-                    ".csv")
-                )
-        )
-  ),
-  
-  
-  #SECOND ROW
-  fluidRow(
-    
-    box(plotlyOutput("plot1"), collapsible=TRUE
+    ###### MEDIC ##########
+    tabItem(tabName = "SP",
+            h2("Employee's biological parameters"),
+            #FIRST ROW
+            fluidRow(
+              
+              box(fileInput("file1", "Choose patient data",
+                            accept = c(
+                              "text/csv",
+                              "text/comma-separated-values,text/plain",
+                              ".csv")
+                            )
+                  )
+              ),
+            
+            #SECOND ROW
+            fluidRow(
+              
+              box(plotlyOutput("plot1"), collapsible=TRUE, title="Temporal trends"),
+              box(selectInput('ycol', 'Choose the desired parameter:', "", selected = ""))
+            ),
+            
+            #THIRD ROW
+            fluidRow(
+              box(DTOutput("dati"), collapsible=TRUE, title = "Data",collapsed = TRUE)
+            )
     ),
     
-    box(selectInput('xcol', 'X Variable', "", selected = ""),
-        selectInput('ycol', 'Y Variable', "", selected = ""))
-  ),
-  
-  #THIRD ROW
-  fluidRow(
-    box(DTOutput("dati"), collapsible=TRUE, title = "Data",collapsed = TRUE
-  )
-  )
-  
-  )
-
-
-
-
-
-
-
+    ##### EMPLOYEE  #######
+    tabItem(tabName="empgeneric",
+            h2("Your biological parameters"),
+            
+            #FIRST ROW
+            fluidRow(
+              
+              box(fileInput("file2", "Upload your data",
+                            accept = c(
+                              "text/csv",
+                              "text/comma-separated-values,text/plain",
+                              ".csv")
+              )
+              )
+            ),
+            
+            fluidRow(
+              
+              box(plotlyOutput("plot2"), collapsible=TRUE, title="Temporal trends")
+              )
+            
+            
+            
+            )
+    )
+)
+###### UI #####
 ui <- dashboardPage(
   header,
   Sidebar,
   body
 )
 
-
+####### SERVER #####
 server <- shinyServer(function(input, output, session) {
   # added "session" because updateSelectInput requires it
   
-  
-  data <- reactive({
+  ####DOC FILE####
+  data1 <- reactive({
     
     req(input$file1) ## ?req #  require that the input is available
     
@@ -84,34 +119,74 @@ server <- shinyServer(function(input, output, session) {
     
     df <- read.csv(inFile$datapath, header = TRUE, sep = ";")
     
-    
-    
-    DatesConv<-as.Date(df$Dates, format="%d/%m/%Y")
-    
-    updateSelectInput(session, inputId = 'xcol', label = 'X Variable',
+    updateSelectInput(session, inputId = 'ycol', label = 'Choose the desired parameter:',
                       choices = names(df), selected = names(df))
-    updateSelectInput(session, inputId = 'ycol', label = 'Y Variable',
-                      choices = names(df), selected = names(df)[2])
-
-
-    
-    
-    
+    #!!!!!
     return(df)
-
-    
     
     
   })
   
-    output$dati = renderDT(data())
-
   
-    output$plot1 = renderPlotly({
-      
-      data<-data()
-      time<-as.POSIXct(strptime(data$Dates,"%d/%m/%Y"))
-      ggplotly(ggplot(data, aes( time, data$HeartRate, color=data$EMP_FiscalCode))+geom_line()+geom_point())
+  #######EMP FILE#######
+  data2 <- reactive({
+    
+    req(input$file2)
+    inFile2 <- input$file2
+    
+    df2<-read.csv(inFile2$datapath, sep = ";", header= TRUE)
+    
+    
+    df2$Date<-as.Date(df2$Date, format="%d/%m/%Y")
+    
+    
+    dfmelted<-melt(df2, id.vars = c('Date'))
+    
+    names(dfmelted)[2]<-'Parameter'
+    names(dfmelted)[3]<-'Value'
+    
+    #!!!!!!!
+    return(dfmelted)
+    
+  })
+  
+  
+  ##### TABLE RENDER ####
+  output$dati = renderDT(data1())
+  
+  #####PLOT 1(MEDIC FIRST)####
+  output$plot1 = renderPlotly({
+    
+    
+    data<-data1()
+    
+    Time<-as.POSIXct(strptime(data$Dates,"%d/%m/%Y"))
+    
+    selectedInput<-data[[input$ycol]]
+    Employee<-data$EMP_FiscalCode
+    
+    
+    
+    #plotly formatting
+    ggplotly(ggplot(data, aes_string( "Time" , input$ycol, color="Employee"  ))
+             +geom_line(size="0.7")
+             +geom_point(size="2")
+             +xlab("Time")
+             +ylab(input$ycol)
+             
+    )
+  })
+  
+  
+  #####PLOT 2 (EMP FIRST)####
+  output$plot2 = renderPlotly({
+    
+    ggplotly(ggplot(data2(), aes(x=Date, y=Value, color=Parameter))
+             +geom_point()
+             +geom_line(aes(group=Parameter))
+    )
+    
+    
   })
   
   
@@ -119,3 +194,4 @@ server <- shinyServer(function(input, output, session) {
 })
 
 shinyApp(ui, server)
+
