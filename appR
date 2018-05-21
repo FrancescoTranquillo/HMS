@@ -18,7 +18,7 @@ library(reshape2)
 
 ###### TITLE ######
 header<- dashboardHeader(
-  title=tags$b("SERENA"))
+  title=strong("SERENA"))
 
 
 
@@ -34,70 +34,119 @@ Sidebar<-dashboardSidebar(
     ),
     menuItem(tags$b("Doctor Section"), tabName= "SP", icon = icon("user-md")),
     menuItem(tags$b("User guide"), tabName="guide", icon=icon("info-circle")),
-    tags$img(src="logo3.png", height="auto",width="auto", style="position:absolute;bottom:0;margin:1px 10px 1px 10px;")
+    menuItem(tags$b("Source code"), icon = icon("file-code-o"), 
+             href = "https://github.com/FrancescoTranquillo/HMS-Serena"),
+    tags$img(src="logo2.png", height="auto",width="auto", style="position:absolute;bottom:0;margin:1px 10px 1px 10px;")
   )
 )
 
 
- 
- ########## BODY ##########
+
+########## BODY ##########
 body<-dashboardBody(
   
   tabItems(
     
     ###### MEDIC ##########
     tabItem(tabName = "SP",
-            h2("Employee's biological parameters"),
-            #FIRST ROW
-            fluidRow(
-              
-              box(fileInput("file1", "Choose patient data",
-                            accept = c(
-                              "text/csv",
-                              "text/comma-separated-values,text/plain",
-                              ".csv")
-                            )
-                  )
-              ),
-            
-            #SECOND ROW
-            fluidRow(
-              
-              box(plotlyOutput("plot1"), collapsible=TRUE, title="Temporal trends"),
-              box(selectInput('ycol', 'Choose the desired parameter:', "", selected = ""))
+            h2(
+              icon("user-md"),
+              tags$b("Monitor your patients")
             ),
             
-            #THIRD ROW
+            
+            #####FIRST ROW#####
             fluidRow(
-              box(DTOutput("dati"), collapsible=TRUE, title = "Data",collapsed = TRUE)
+              
+              box( title = strong("Upload your file here"), 
+                   solidHeader = TRUE, status = "success", background = "green",
+                   
+                   
+                   fileInput("file1", label = NULL, accept = c("text/csv","text/comma-separated-values,text/plain",".csv"))
+                   
+                   
+                   
+              ),
+              box( title = strong("Help me"),
+                   solidHeader = TRUE, status = "warning", collapsible = TRUE, collapsed = TRUE,
+                   
+                   "Serena accepts only files with a", strong(".csv"),"extension. To upload a file, click on the Browse button on the left and select your file from your computer.", 
+                   br(),
+                   br(),
+                   "Too slow?",
+                   br(),
+                   "Serena supports Drag&Drop feature! Drag your file and drop it in the Browse button!",
+                   br(),
+                   br(),
+                   "When the file will be uploaded, you can expand the next boxto visualize and interact with your data"
+              )
+            ),
+            
+            
+            
+            ######SECOND ROW#######
+            fluidRow(
+              
+              box(status="success", width="100%",collapsible=TRUE,  collapsed=TRUE, solidHeader = TRUE, 
+                  title=tags$b("Visualize your data"),
+                  tabBox(  width = "85%",
+                           tabPanel(
+                             plotlyOutput("plot1"), collapsible=TRUE, title=tags$b("Temporal trends"), solidHeader = TRUE, status="primary",
+                             selectInput('ycol', 'Choose the desired parameter:', "", selected =""),solidHeader = TRUE, status="primary"
+                           ),
+                           tabPanel(
+                             DTOutput("dati"), collapsible=TRUE, title = "Table",collapsed = TRUE
+                           )
+                  )
+              )
             )
     ),
     
     ##### EMPLOYEE  #######
     tabItem(tabName="empgeneric",
-            h2("Your biological parameters"),
+            h2(icon("user"),
+               strong("Your parameters")
+               ),
             
-            #FIRST ROW
+            ######FIRST ROW######
             fluidRow(
               
-              box(fileInput("file2", "Upload your data",
-                            accept = c(
-                              "text/csv",
-                              "text/comma-separated-values,text/plain",
-                              ".csv")
-              )
+              box( title = strong("Upload your file here"),
+                   solidHeader = TRUE, status = "info", background = "aqua",
+                   
+                   
+                   fileInput("file2", label = NULL, accept = c("text/csv","text/comma-separated-values,text/plain",".csv"))
+                   
+                   
+                   
+              ),
+              box( title = strong("Help me"),
+                   solidHeader = TRUE, status = "warning", collapsible = TRUE, collapsed = TRUE,
+                   
+                   "Serena accepts only files with a", strong(".csv"),"extension. To upload a file, click on the Browse button on the left and select your file from your computer.", 
+                   br(),
+                   br(),
+                   "Too slow?",
+                   br(),
+                   "Serena supports Drag&Drop feature! Drag your file and drop it in the Browse button!",
+                   br(),
+                   br(),
+                   "When the file will be uploaded, you can expand the next boxto visualize and interact with your data"
               )
             ),
             
+            ####SECOND ROW######
+            
             fluidRow(
               
-              box(plotlyOutput("plot2"), collapsible=TRUE, title="Temporal trends")
+              box(plotlyOutput("plot2"), collapsible=TRUE, title=tags$b("Temporal trends"), solidHeader = TRUE, status="info"
               )
-            
-            
-            
+              
+              
+              
             )
     )
+  )
 )
 ###### UI #####
 ui <- dashboardPage(
@@ -110,6 +159,8 @@ ui <- dashboardPage(
 server <- shinyServer(function(input, output, session) {
   # added "session" because updateSelectInput requires it
   
+  
+  
   ####DOC FILE####
   data1 <- reactive({
     
@@ -117,14 +168,14 @@ server <- shinyServer(function(input, output, session) {
     
     inFile <- input$file1
     
+    
     df <- read.csv(inFile$datapath, header = TRUE, sep = ";")
     
     updateSelectInput(session, inputId = 'ycol', label = 'Choose the desired parameter:',
                       choices = names(df), selected = names(df))
     #!!!!!
+    
     return(df)
-    
-    
   })
   
   
@@ -183,7 +234,10 @@ server <- shinyServer(function(input, output, session) {
     
     ggplotly(ggplot(data2(), aes(x=Date, y=Value, color=Parameter))
              +geom_point()
-             +geom_line(aes(group=Parameter))
+             +geom_line()
+             # +geom_hline(stat="identity", aes(yintercept=50), show.legend = TRUE)
+             # +facet_wrap(~Parameter, ncol=2)
+             
     )
     
     
@@ -194,4 +248,3 @@ server <- shinyServer(function(input, output, session) {
 })
 
 shinyApp(ui, server)
-
