@@ -249,7 +249,7 @@ server <- shinyServer(function(input, output, session) {
     
     names(dfmelted)[2]<-'Parameter'
     names(dfmelted)[3]<-'Value'
-    
+    dfmelted<-na.omit(dfmelted)
     #!!!!!!!
     return(dfmelted)
     
@@ -269,6 +269,8 @@ server <- shinyServer(function(input, output, session) {
     
     updateSelectInput(session, inputId = "Parameter", label="Select a parameter:",
                       choices=names(df2[,-1]),selected=names(df2[,-1]))
+    
+    df2<-na.omit(df2)
     return(df2)
   })
   
@@ -276,13 +278,13 @@ server <- shinyServer(function(input, output, session) {
     
     
     
-    paste("<b>Mean = ", mean(data3()[[input$Parameter]]),
+    paste("<b>Mean = ", mean(data3()[[input$Parameter]], na.rm=TRUE),
           "<br>",
-          "<b>SD = ", signif(sd(data3()[[input$Parameter]]), 3),
+          "<b>SD = ", signif(sd(data3()[[input$Parameter]],na.rm=TRUE), 3),
           "<br>",
-          "<b>Max = ", max(data3()[[input$Parameter]]),
+          "<b>Max = ", max(data3()[[input$Parameter]],na.rm=TRUE),
           "<br>",
-          "<b>Min = ", min(data3()[[input$Parameter]])
+          "<b>Min = ", min(data3()[[input$Parameter]],na.rm=TRUE)
           
     )
   })
