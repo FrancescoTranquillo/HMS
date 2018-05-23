@@ -15,6 +15,7 @@ library (DT)
 library (ggplot2)
 library (plotly)
 library(reshape2)
+library(data.table)
 
 ###### TITLE ######
 header<- dashboardHeader(
@@ -27,16 +28,13 @@ header<- dashboardHeader(
 ###### SIDEBAR #####
 Sidebar<-dashboardSidebar(
   sidebarMenu(
+    
     menuItem(tags$strong("Welcome"), tabName="Welcome page", icon=icon("home"), selected= TRUE),
-    menuItem(tags$b("Employee Section"), tabName= "Employee", icon=icon("user"),
-             menuSubItem(tags$b("Temporal Trend"), tabName = "empgeneric"),
-             menuSubItem(tags$b("Specific Temporal Trend"), tabName="empspecific")
-    ),
+    menuItem(tags$b("Employee Section"), tabName= "Employee", icon=icon("user")),
     menuItem(tags$b("Doctor Section"), tabName= "SP", icon = icon("user-md")),
     menuItem(tags$b("User guide"), tabName="guide", icon=icon("info-circle")),
-    menuItem(tags$b("Source code"), icon = icon("file-code-o"), 
-             href = "https://github.com/FrancescoTranquillo/HMS-Serena"),
-    tags$img(src="logo2.png", height="auto",width="auto", style="position:absolute;bottom:0;margin:1px 10px 1px 10px;")
+    menuItem(tags$b("Source code"), icon = icon("file-code-o"), href = "https://github.com/FrancescoTranquillo/HMS-Serena"),
+    tags$img(src="logo2.png", height="auto",width="auto")
   )
 )
 
@@ -47,7 +45,7 @@ body<-dashboardBody(
   
   tabItems(
     
-    ###### MEDIC ##########
+      ###### MEDIC ##########
     tabItem(tabName = "SP",
             h2(
               icon("user-md"),
@@ -91,21 +89,34 @@ body<-dashboardBody(
                   title=tags$b("Visualize your data"),
                   tabBox(  width = "85%",
                            tabPanel(
-                             plotlyOutput("plot1"), collapsible=TRUE, title=tags$b("Temporal trends"), solidHeader = TRUE, status="primary",
+                             plotlyOutput("plot1"),title=tags$b("Temporal trends"),
                              selectInput('ycol', 'Choose the desired parameter:', "", selected =""),solidHeader = TRUE, status="primary"
                            ),
                            tabPanel(
                              DTOutput("dati"), collapsible=TRUE, title = "Table",collapsed = TRUE
+                           ),
+                           tabPanel(
+                             "Employee-Specific",
+                             box(
+                             selectInput('EMP2', 'Select an employee:', "", selected = "abc"),
+                             selectInput('Parameter2', "Select a specific parameter:", "", selected="")
+                             ),
+                             box(
+                               plotlyOutput("plot4")
+                             )
+                            
+
+                           )
                            )
                   )
               )
-            )
-    ),
+            ),
     
-    ##### EMPLOYEE  #######
-    tabItem(tabName="empgeneric",
-            h2(icon("user"),
-               strong("Your parameters")
+     ##### EMPLOYEE  #######
+    tabItem(tabName = "Employee",
+            h2(
+              icon("user"),
+              tags$b("Your parameters")
                ),
             
             ######FIRST ROW######
@@ -131,23 +142,27 @@ body<-dashboardBody(
                    "Serena supports Drag&Drop feature! Drag your file and drop it in the Browse button!",
                    br(),
                    br(),
-                   "When the file will be uploaded, you can expand the next boxto visualize and interact with your data"
+                   "When the file will be uploaded, you can expand the next box to visualize and interact with your data"
               )
             ),
             
             ####SECOND ROW######
             
+
+            box(plotlyOutput("plot2"), collapsible=TRUE, title=tags$b("Generic"), solidHeader = TRUE, status="info", width = "100%"),
             fluidRow(
-              
-              box(plotlyOutput("plot2"), collapsible=TRUE, title=tags$b("Temporal trends"), solidHeader = TRUE, status="info"
+              box(
+                selectInput('Parameter', "Select a specific parameter:", "", selected=""),
+                htmlOutput("stats")
+              ),
+              box(
+                  plotlyOutput("plot3"),collapsible=TRUE, title=tags$b("Parameter-specific "), solidHeader = TRUE, status = "info"
+                )
               )
-              
-              
-              
             )
     )
   )
-)
+
 ###### UI #####
 ui <- dashboardPage(
   header,
@@ -161,7 +176,7 @@ server <- shinyServer(function(input, output, session) {
   
   
   
-  ####DOC FILE####
+  ####DOC FILE for plot M1####
   data1 <- reactive({
     
     req(input$file1) ## ?req #  require that the input is available
@@ -172,14 +187,53 @@ server <- shinyServer(function(input, output, session) {
     df <- read.csv(inFile$datapath, header = TRUE, sep = ";")
     
     updateSelectInput(session, inputId = 'ycol', label = 'Choose the desired parameter:',
-                      choices = names(df), selected = names(df))
+                      choices = names(df[,-2]), selected = names(df[,-2]))
+    
+
+
     #!!!!!
     
     return(df)
   })
   
   
-  #######EMP FILE#######
+  ####DOC FILE for plot M2####
+  
+
+  data4 <- reactive({
+    
+      
+      req(input$file1) ## ?req #  require that the input is available
+      
+      inFile <- input$file1
+      
+      df <- read.csv(inFile$datapath, header = TRUE, sep = ";")
+      
+      df<- mutate(df, Dates=as.Date(df$Date, "%d/%m/%Y"))
+      
+      df[2]<-NULL
+      #extraction of employee
+      
+      
+      
+      updateSelectInput(session, inputId = "Parameter2", label="Select a parameter:",
+                        choices=names(df[,-2]),selected=names(df[,-2]))
+      attach(df)
+
+      updateSelectInput(session, inputId="EMP2", label="Select Employee:",
+                        choices=EMP_FiscalCode, selected=EMP_FiscalCode)
+      
+      detach(df)
+      
+      library(data.table)
+      mydata<-as.data.frame(df)
+      return(mydata)
+
+      })
+  
+
+  
+  #######EMP FILE for plot E1#######
   data2 <- reactive({
     
     req(input$file2)
@@ -199,13 +253,43 @@ server <- shinyServer(function(input, output, session) {
     #!!!!!!!
     return(dfmelted)
     
+    
+  })
+  #####EMP FILE for plot E2#####
+  data3<- reactive({
+    
+    req(input$file2)
+    inFile2<-input$file2
+    df2<-read.csv(inFile2$datapath, sep = ";", header= TRUE)
+    
+    
+    df2$Date<-as.Date(df2$Date, format="%d/%m/%Y")
+    
+    
+    
+    updateSelectInput(session, inputId = "Parameter", label="Select a parameter:",
+                      choices=names(df2[,-1]),selected=names(df2[,-1]))
+    return(df2)
   })
   
-  
+  output$stats= renderText({
+    
+    
+    
+    paste("<b>Mean = ", mean(data3()[[input$Parameter]]),
+          "<br>",
+          "<b>SD = ", signif(sd(data3()[[input$Parameter]]), 3),
+          "<br>",
+          "<b>Max = ", max(data3()[[input$Parameter]]),
+          "<br>",
+          "<b>Min = ", min(data3()[[input$Parameter]])
+          
+    )
+  })
   ##### TABLE RENDER ####
   output$dati = renderDT(data1())
   
-  #####PLOT 1(MEDIC FIRST)####
+  #####PLOT M1####
   output$plot1 = renderPlotly({
     
     
@@ -229,11 +313,11 @@ server <- shinyServer(function(input, output, session) {
   })
   
   
-  #####PLOT 2 (EMP FIRST)####
+  #####PLOT E1####
   output$plot2 = renderPlotly({
     
     ggplotly(ggplot(data2(), aes(x=Date, y=Value, color=Parameter))
-             +geom_point()
+             
              +geom_line()
              # +geom_hline(stat="identity", aes(yintercept=50), show.legend = TRUE)
              # +facet_wrap(~Parameter, ncol=2)
@@ -242,9 +326,53 @@ server <- shinyServer(function(input, output, session) {
     
     
   })
+  #####PLOT E2#######
+  output$plot3=renderPlotly({
+    
+    
+    # thr<-input$Parameter<100& input$Parameter>50
+    ggplotly(
+      ggplot(data3(),aes_string(x="Date", y=input$Parameter))
+      +geom_point()
+      +geom_line()
+      
+      +theme(legend.position='none')
+        
+      )
+  })
   
   
   
+  
+  #####PLOT M2#####
+
+  selecteddata<-reactive({
+
+    empdata<-filter(data4(), EMP_FiscalCode == input$EMP2)
+    
+    #removing FC column 
+    empdata[2]<-NULL
+    
+    return(empdata)
+    
+  })
+  output$plot4 = renderPlotly({
+    
+
+    
+    ggplotly(ggplot(selecteddata(), aes_string(x="Dates", y=input$Parameter2))
+             +geom_point()
+             +geom_line()
+             +theme(legend.position='none')
+             # +geom_hline(stat="identity", aes(yintercept=50), show.legend = TRUE)
+             # +facet_wrap(~Parameter, ncol=2)
+    )
+    
+    
+    
+    
+  })
 })
 
 shinyApp(ui, server)
+
