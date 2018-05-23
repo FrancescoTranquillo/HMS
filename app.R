@@ -89,8 +89,9 @@ body<-dashboardBody(
                   title=tags$b("Visualize your data"),
                   tabBox(  width = "85%",
                            tabPanel(
-                             plotlyOutput("plot1"),title=tags$b("Temporal trends"),
-                             selectInput('ycol', 'Choose the desired parameter:', "", selected =""),solidHeader = TRUE, status="primary"
+                             selectInput('ycol', 'Choose the desired parameter:', "", selected =""),solidHeader = TRUE, status="primary",
+                             plotlyOutput("plot1"),title=tags$b("Temporal trends")
+                             
                            ),
                            tabPanel(
                              DTOutput("dati"), collapsible=TRUE, title = "Table",collapsed = TRUE
