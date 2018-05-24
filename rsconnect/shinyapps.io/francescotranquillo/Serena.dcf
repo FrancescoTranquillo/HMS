@@ -1,0 +1,12 @@
+name: Serena
+title: Serena
+username:
+account: francescotranquillo
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 348276
+bundleId: 1390810
+url: https://francescotranquillo.shinyapps.io/Serena/
+when: 1527159707.61063
+asMultiple: FALSE
+asStatic: FALSE
