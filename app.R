@@ -19,7 +19,8 @@ library(data.table)
 
 ###### TITLE ######
 header<- dashboardHeader(
-  title=strong("SERENA"))
+  title=tags$b("SERENA")
+)
 
 
 
@@ -28,7 +29,7 @@ header<- dashboardHeader(
 ###### SIDEBAR #####
 Sidebar<-dashboardSidebar(
   sidebarMenu(
-    
+
     menuItem(tags$strong("Welcome"), tabName="Welcome page", icon=icon("home"), selected= TRUE),
     menuItem(tags$b("Employee Section"), tabName= "Employee", icon=icon("user")),
     menuItem(tags$b("Doctor Section"), tabName= "SP", icon = icon("user-md")),
