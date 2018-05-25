@@ -1,3 +1,4 @@
+
 #
 # This is a Shiny web application. You can run the application by clicking
 # the 'Run App' button above.
@@ -88,7 +89,7 @@ body<-dashboardBody(
 
               # box(
               #   status="success", collapsible=TRUE,  collapsed=FALSE, solidHeader = TRUE,title=tags$b("Overview"), width = "85%",
-                
+
                   tabBox(title = "Overview", width = "85%",
                     tabItem(
                       tabName = "tab1", title= "Trends",
@@ -100,25 +101,23 @@ body<-dashboardBody(
                       DTOutput("dati")
                     )
                   )
-                
-                
+
+
                # )
               ),
             fluidRow(
-              box(
-                title="Employee-Specific",
-                
-                box( title="Set thresholds",
+
+                h2("Employee-Specific"),
+
+                box(title=tags$b("Settings"), status="success", solidHeader = TRUE,
                      selectInput('EMP2', 'Select an employee:', "", selected = "abc"),
-                     selectInput('Parameter2', "Select a specific parameter:", "", selected="")
+                     selectInput('Parameter2', "Select a specific parameter:", "", selected=""),
+                     sliderInput("slider2", label = "Thresholds", min = 0, max = 200, value = c(40, 60))
                 ),
-                box(
-                  sliderInput("slider2", label = h3("Slider Range"), min = 0, max = 200, value = c(40, 60))
-                ),
-                box(
+                box(status="success", solidHeader = TRUE,
                   plotlyOutput("plot4")
                 )
-              )
+
             )
     ),
 
@@ -198,7 +197,7 @@ server <- shinyServer(function(input, output, session) {
 
 
     df <- read.csv(inFile$datapath, header = TRUE, sep = ";")
-    
+
     df$Dates<- as.Date(df$Dates, format="%d/%m/%Y")
 
     updateSelectInput(session, inputId = 'ycol', label = 'Choose the desired parameter:',
@@ -311,7 +310,7 @@ server <- shinyServer(function(input, output, session) {
 
 
     # data<-data1()
-    # 
+    #
     # Time<-as.POSIXct(strptime(data$Dates,"%d/%m/%Y"))
 
     # selectedInput<-data[[input$ycol]]

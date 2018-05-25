@@ -7,7 +7,7 @@
 
 - [Introduction](introduction)
 - [Installation](installation)
-- [Citation](citation)
+- [Methodology](citation)
 - [Contact](contact)
 - [Acknowledgements](acknowledgements)
 
@@ -32,5 +32,18 @@ Currently, Serena is using these libraries:
 
 To install them copy and paste this code on R:
 
-`install.packages(c("shiny","shinydashboard","DT","ggplot2","plotly","reshape2","data.table"))`
+`install.packages(c("shiny",
+"shinydashboard",
+"DT",
+"ggplot2",
+"plotly",
+"reshape2",
+"data.table"))`
+
 To run the app from your browser you can also go to this [link](https://FrancescoTranquillo.shinyapps.io/Medinfo/)
+
+## Methodology
+
+Serena has been developed using many different packages of the software R. These packages are used within the app during the data preparation for the plotting of the temporal trends.
+
+The plots are obtained using mainly "ggplot2" package. The interactivity is given by "plotly" which is a JavaScript package that makes easier for the user to visualize and interact with the plot.
