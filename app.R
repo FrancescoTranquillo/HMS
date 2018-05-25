@@ -86,33 +86,41 @@ body<-dashboardBody(
             ######SECOND ROW#######
             fluidRow(
 
-              box(status="success", width="100%",collapsible=TRUE,  collapsed=TRUE, solidHeader = TRUE,
-                  title=tags$b("Visualize your data"),
-                  tabBox(  width = "85%",
-                           tabPanel(
-                             selectInput('ycol', 'Choose the desired parameter:', "", selected =""),solidHeader = TRUE, status="primary",
-                             plotlyOutput("plot1"),title=tags$b("Temporal trends")
-
-                           ),
-                           tabPanel(
-                             DTOutput("dati"), collapsible=TRUE, title = "Table",collapsed = TRUE
-                           ),
-                           tabPanel(
-                             "Employee-Specific",
-                             box(
-                             selectInput('EMP2', 'Select an employee:', "", selected = "abc"),
-                             selectInput('Parameter2', "Select a specific parameter:", "", selected="")
-                             ),
-                             box(
-                               plotlyOutput("plot4")
-                             )
-
-
-                           )
-                           )
+              # box(
+              #   status="success", collapsible=TRUE,  collapsed=FALSE, solidHeader = TRUE,title=tags$b("Overview"), width = "85%",
+                
+                  tabBox(title = "Overview", width = "85%",
+                    tabItem(
+                      tabName = "tab1", title= "Trends",
+                      selectInput('ycol', 'Choose the desired parameter:', "", selected =""),
+                      plotlyOutput("plot1")
+                    ),
+                    tabItem(
+                      tabName = "tab2", title= "Table",
+                      DTOutput("dati")
+                    )
                   )
+                
+                
+               # )
+              ),
+            fluidRow(
+              box(
+                title="Employee-Specific",
+                
+                box( title="Set thresholds",
+                     selectInput('EMP2', 'Select an employee:', "", selected = "abc"),
+                     selectInput('Parameter2', "Select a specific parameter:", "", selected="")
+                ),
+                box(
+                  sliderInput("slider2", label = h3("Slider Range"), min = 0, max = 200, value = c(40, 60))
+                ),
+                box(
+                  plotlyOutput("plot4")
+                )
               )
-            ),
+            )
+    ),
 
      ##### EMPLOYEE  HR#######
     tabItem(tabName = "Employee",
@@ -162,8 +170,11 @@ body<-dashboardBody(
                 )
               )
             )
-    )
+
   )
+)
+
+
 
 ###### UI #####
 ui <- dashboardPage(
@@ -187,6 +198,8 @@ server <- shinyServer(function(input, output, session) {
 
 
     df <- read.csv(inFile$datapath, header = TRUE, sep = ";")
+    
+    df$Dates<- as.Date(df$Dates, format="%d/%m/%Y")
 
     updateSelectInput(session, inputId = 'ycol', label = 'Choose the desired parameter:',
                       choices = names(df[,-2]), selected = names(df[,-2]))
@@ -297,17 +310,17 @@ server <- shinyServer(function(input, output, session) {
   output$plot1 = renderPlotly({
 
 
-    data<-data1()
+    # data<-data1()
+    # 
+    # Time<-as.POSIXct(strptime(data$Dates,"%d/%m/%Y"))
 
-    Time<-as.POSIXct(strptime(data$Dates,"%d/%m/%Y"))
-
-    selectedInput<-data[[input$ycol]]
-    Employee<-data$EMP_FiscalCode
+    # selectedInput<-data[[input$ycol]]
+    Employee<-data1()$EMP_FiscalCode
 
 
 
     #plotly formatting
-    ggplotly(ggplot(data, aes_string( "Time" , input$ycol, color="Employee"  ))
+    ggplotly(ggplot(data1(), aes_string( x="Dates" , y=input$ycol, color="Employee"  ))
              +geom_line(size="0.7")
              +geom_point(size="2")
              +xlab("Time")
