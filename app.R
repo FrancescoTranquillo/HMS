@@ -114,7 +114,7 @@ body<-dashboardBody(
               )
             ),
 
-     ##### EMPLOYEE  #######
+     ##### EMPLOYEE  HR#######
     tabItem(tabName = "Employee",
             h2(
               icon("user"),
