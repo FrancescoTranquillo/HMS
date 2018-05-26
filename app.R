@@ -1,3 +1,4 @@
+
 #
 # This is a Shiny web application. You can run the application by clicking
 # the 'Run App' button above.
@@ -17,15 +18,11 @@ library (plotly)
 library(reshape2)
 library(data.table)
 
+
 ###### TITLE ######
 header<- dashboardHeader(
   title=tags$b("SERENA")
-)
-
-
-
-
-
+  )
 ###### SIDEBAR #####
 Sidebar<-dashboardSidebar(
   sidebarMenu(
@@ -34,13 +31,10 @@ Sidebar<-dashboardSidebar(
     menuItem(tags$b("Employee Section"), tabName= "Employee", icon=icon("user")),
     menuItem(tags$b("Doctor Section"), tabName= "SP", icon = icon("user-md")),
     menuItem(tags$b("User guide"), tabName="guide", icon=icon("info-circle")),
-    menuItem(tags$b("Source code"), icon = icon("file-code-o"), href = "https://github.com/FrancescoTranquillo/HMS-Serena"),
+    menuItem(tags$b("Source code"), icon = icon("file-code-o"), href = "https://github.com/FrancescoTranquillo/Serena"),
     tags$img(src="logo2.png", height="auto",width="auto")
-  )
-)
-
-
-
+    )
+    )
 ########## BODY ##########
 body<-dashboardBody(
 
@@ -86,35 +80,48 @@ body<-dashboardBody(
             ######SECOND ROW#######
             fluidRow(
 
-              box(status="success", width="100%",collapsible=TRUE,  collapsed=TRUE, solidHeader = TRUE,
-                  title=tags$b("Visualize your data"),
-                  tabBox(  width = "85%",
-                           tabPanel(
-                             selectInput('ycol', 'Choose the desired parameter:', "", selected =""),solidHeader = TRUE, status="primary",
-                             plotlyOutput("plot1"),title=tags$b("Temporal trends")
+              # box(
+              #   status="success", collapsible=TRUE,  collapsed=FALSE, solidHeader = TRUE,title=tags$b("Overview"), width = "85%",
 
-                           ),
-                           tabPanel(
-                             DTOutput("dati"), collapsible=TRUE, title = "Table",collapsed = TRUE
-                           ),
-                           tabPanel(
-                             "Employee-Specific",
-                             box(
-                             selectInput('EMP2', 'Select an employee:', "", selected = "abc"),
-                             selectInput('Parameter2', "Select a specific parameter:", "", selected="")
-                             ),
-                             box(
-                               plotlyOutput("plot4")
-                             )
-
-
-                           )
-                           )
+                  tabBox(title = "Overview", width = "85%",
+                    tabItem(
+                      tabName = "tab1", title= "Trends",
+                      selectInput('ycol', 'Choose the desired parameter:', "", selected =""),
+                      plotlyOutput("plot1")
+                    ),
+                    tabItem(
+                      tabName = "tab2", title= "Table",
+                      DTOutput("dati")
+                    )
                   )
-              )
-            ),
 
-     ##### EMPLOYEE  #######
+
+               # )
+              ),
+            fluidRow(
+
+                h2("Employee-Specific"),
+
+                box(title=tags$b("Settings"), status="success", solidHeader = TRUE,
+                     selectInput('EMP2', 'Select an employee:', "", selected = "abc"),
+                     selectInput('Parameter2', "Select a specific parameter:", "", selected=""),
+                     sliderInput("slider1", label = "Inferior threshold", min = 0, max = 100, value = c(50)),
+                     sliderInput("slider2", label = "Superior threshold", min = 0, max = 100, value = c(50))
+                ),
+                box(status="success", solidHeader = TRUE, title=tags$b("Trend"),
+                  plotlyOutput("plot4")
+                )
+            ),
+            fluidRow(
+              infoBoxOutput("AbnormalsBox"),
+              infoBoxOutput("MeanBox"),
+              infoBoxOutput("SDBox")
+            )
+    ),
+
+
+
+     ##### EMPLOYEE  HR#######
     tabItem(tabName = "Employee",
             h2(
               icon("user"),
@@ -153,17 +160,27 @@ body<-dashboardBody(
 
             box(plotlyOutput("plot2"), collapsible=TRUE, title=tags$b("Generic"), solidHeader = TRUE, status="info", width = "100%"),
             fluidRow(
-              box(
+              box( solidHeader = TRUE, status = "info", title=tags$b("Settings"),
                 selectInput('Parameter', "Select a specific parameter:", "", selected=""),
-                htmlOutput("stats")
+                sliderInput("slider3", label = "Inferior threshold", min = 0, max = 100, value = c(50)),
+                sliderInput("slider4", label = "Superior threshold", min = 0, max = 100, value = c(50))
               ),
               box(
                   plotlyOutput("plot3"),collapsible=TRUE, title=tags$b("Parameter-specific "), solidHeader = TRUE, status = "info"
                 )
+              ),
+              fluidRow(
+                h2("Results"),
+                infoBoxOutput("AbnormalsBoxEMP"),
+                infoBoxOutput("MeanBoxEMP"),
+                infoBoxOutput("SDBoxEMP")
               )
             )
-    )
+
   )
+)
+
+
 
 ###### UI #####
 ui <- dashboardPage(
@@ -188,6 +205,8 @@ server <- shinyServer(function(input, output, session) {
 
     df <- read.csv(inFile$datapath, header = TRUE, sep = ";")
 
+    df$Dates<- as.Date(df$Dates, format="%d/%m/%Y")
+
     updateSelectInput(session, inputId = 'ycol', label = 'Choose the desired parameter:',
                       choices = names(df[,-2]), selected = names(df[,-2]))
 
@@ -211,7 +230,7 @@ server <- shinyServer(function(input, output, session) {
 
       df <- read.csv(inFile$datapath, header = TRUE, sep = ";")
 
-      df<- mutate(df, Dates=as.Date(df$Date, "%d/%m/%Y"))
+      df$Dates<- as.Date(df$Dates, "%d/%m/%Y")
 
       df[2]<-NULL
       #extraction of employee
@@ -275,21 +294,35 @@ server <- shinyServer(function(input, output, session) {
     df2<-na.omit(df2)
     return(df2)
   })
-
-  output$stats= renderText({
-
-
-
-    paste("<b>Mean = ", mean(data3()[[input$Parameter]], na.rm=TRUE),
-          "<br>",
-          "<b>SD = ", signif(sd(data3()[[input$Parameter]],na.rm=TRUE), 3),
-          "<br>",
-          "<b>Max = ", max(data3()[[input$Parameter]],na.rm=TRUE),
-          "<br>",
-          "<b>Min = ", min(data3()[[input$Parameter]],na.rm=TRUE)
-
+  output$AbnormalsBoxEMP<- renderInfoBox({
+    infoBox(
+      tags$b("Number of abnormal values"), paste0( countabEMP()),
+      icon=icon("exclamation-triangle"), fill= TRUE,
+      color="aqua"
     )
   })
+
+    output$MeanBoxEMP<- renderInfoBox({
+      infoBox(
+        tags$b("Mean"), paste0(signif(mean(data3()[[input$Parameter]], na.rm=TRUE),3)),
+        icon=icon("calculator"), fill=TRUE, color="aqua"
+      )
+    })
+
+    output$SDBoxEMP<- renderInfoBox({
+      infoBox(
+        tags$b("Standard deviation"), paste0(signif(sd(data3()[[input$Parameter]], na.rm=TRUE),3)),
+        icon=icon("align-center"), fill=TRUE, color="aqua"
+      )
+    })
+    abnormalsEMP<-reactive({
+      thrEMP<-data3()[input$Parameter]<input$slider3 | data3()[input$Parameter]>input$slider4
+      return(thrEMP)
+      })
+      countabEMP<-reactive({
+        numEMP<-length(abnormalsEMP()[abnormalsEMP()==TRUE])
+        return(numEMP)
+        })
   ##### TABLE RENDER ####
   output$dati = renderDT(data1())
 
@@ -297,17 +330,17 @@ server <- shinyServer(function(input, output, session) {
   output$plot1 = renderPlotly({
 
 
-    data<-data1()
+    # data<-data1()
+    #
+    # Time<-as.POSIXct(strptime(data$Dates,"%d/%m/%Y"))
 
-    Time<-as.POSIXct(strptime(data$Dates,"%d/%m/%Y"))
-
-    selectedInput<-data[[input$ycol]]
-    Employee<-data$EMP_FiscalCode
+    # selectedInput<-data[[input$ycol]]
+    Employee<-data1()$EMP_FiscalCode
 
 
 
     #plotly formatting
-    ggplotly(ggplot(data, aes_string( "Time" , input$ycol, color="Employee"  ))
+    ggplotly(ggplot(data1(), aes_string( x="Dates" , y=input$ycol, color="Employee"  ))
              +geom_line(size="0.7")
              +geom_point(size="2")
              +xlab("Time")
@@ -325,26 +358,46 @@ server <- shinyServer(function(input, output, session) {
              +geom_line()
              # +geom_hline(stat="identity", aes(yintercept=50), show.legend = TRUE)
              # +facet_wrap(~Parameter, ncol=2)
-
-    )
+           )
 
 
   })
-  #####PLOT E2#######
+    #####PLOT E2#######
+
   output$plot3=renderPlotly({
 
-
+    colsEMP<-reactive({
+      if(all(abnormalsEMP()>0)) casesEMP<-"red" else
+      if(all(abnormalsEMP()<0)) casesEMP<-"black" else
+      casesEMP<-c("black","red")
+      return(casesEMP)
+    })
     # thr<-input$Parameter<100& input$Parameter>50
     ggplotly(
       ggplot(data3(),aes_string(x="Date", y=input$Parameter))
-      +geom_point()
+      +geom_point(aes(color=abnormalsEMP()))
+
       +geom_line()
-
       +theme(legend.position='none')
-
-      )
+      +scale_color_manual(values=colsEMP())
+      +geom_hline(yintercept=input$slider3,color="red")
+      +geom_hline(yintercept=input$slider4,color="red")
+  )
   })
 
+
+
+###### SLIDERS########
+liminf<-reactive({
+
+  a<-input$slider1
+  return(a)
+})
+
+limsup<-reactive({
+  b<-input$slider2
+  return(b)
+})
 
 
 
@@ -357,25 +410,58 @@ server <- shinyServer(function(input, output, session) {
     #removing FC column
     empdata[2]<-NULL
 
+
+
     return(empdata)
 
+
   })
+
+  abnormals<-reactive({
+    thr<-selecteddata()[input$Parameter2]<input$slider1 | selecteddata()[input$Parameter2]>input$slider2
+    return(thr)
+  })
+
+  countab<-reactive({
+    num<-length(abnormals()[abnormals()==TRUE])
+    return(num)
+  })
+
+
   output$plot4 = renderPlotly({
-
-
-
-    ggplotly(ggplot(selecteddata(), aes_string(x="Dates", y=input$Parameter2))
-             +geom_point()
-             +geom_line()
-             +theme(legend.position='none')
-             # +geom_hline(stat="identity", aes(yintercept=50), show.legend = TRUE)
-             # +facet_wrap(~Parameter, ncol=2)
-    )
-
-
-
-
-  })
-})
-
+    cols<-reactive({
+      if(all(abnormals()>0)) cases<-"red" else
+      if(all(abnormals()<0)) cases<-"black" else
+      cases<-c("black","red")
+      return(cases)
+      })
+      output$AbnormalsBox<- renderInfoBox({
+        infoBox(
+          tags$b("Number of abnormal values"), paste0( countab()),
+          icon=icon("exclamation-triangle"), fill= TRUE, color="green")
+          })
+          output$MeanBox<- renderInfoBox({
+            infoBox(
+              tags$b("Mean"), paste0(signif(mean(selecteddata()[[input$Parameter2]], na.rm=TRUE),3)),
+              icon=icon("calculator"), fill=TRUE, color="green"
+              )
+              })
+              output$SDBox<- renderInfoBox({
+                infoBox(
+                  tags$b("Standard deviation"), paste0(signif(sd(selecteddata()[[input$Parameter2]], na.rm=TRUE),3)),
+                  icon=icon("align-center"), fill=TRUE, color="green"
+                  )
+                  })
+                  ggplotly(ggplot(selecteddata(), aes_string("Dates", input$Parameter2))
+                  +geom_point(aes(color=abnormals()))
+                  +geom_line()
+                  +theme(legend.position='none')
+                  +scale_color_manual(values=cols())
+                  +geom_hline(yintercept=input$slider1,color="red")
+                  +geom_hline(yintercept=input$slider2,color="red")
+                  )
+                  }
+                )
+                }
+                )
 shinyApp(ui, server)
