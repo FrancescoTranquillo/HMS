@@ -27,10 +27,10 @@ header<- dashboardHeader(
 Sidebar<-dashboardSidebar(
   sidebarMenu(
 
-    menuItem(tags$strong("Welcome"), tabName="Welcome page", icon=icon("home"), selected= TRUE),
-    menuItem(tags$b("Employee Section"), tabName= "Employee", icon=icon("user")),
-    menuItem(tags$b("Doctor Section"), tabName= "SP", icon = icon("user-md")),
-    menuItem(tags$b("User guide"), tabName="guide", icon=icon("info-circle")),
+    menuItem(tags$strong("Welcome"), tabName="Welcomepage", icon=icon("home"), selected= TRUE),
+    menuItem(tags$b("Employee"), tabName= "Employee", icon=icon("user")),
+    menuItem(tags$b("Specialized Practitioner"), tabName= "SP", icon = icon("user-md")),
+    menuItem(tags$b("Technical Administrator"), tabName="guide", icon=icon("info-circle")),
     menuItem(tags$b("Source code"), icon = icon("file-code-o"), href = "https://github.com/FrancescoTranquillo/Serena"),
     tags$img(src="logo2.png", height="auto",width="auto")
     )
@@ -39,6 +39,43 @@ Sidebar<-dashboardSidebar(
 body<-dashboardBody(
 
   tabItems(
+    ######WELCOME####
+    tabItem(tabName="Welcomepage",
+    fluidRow(
+      column(width=12,
+        tabBox(
+          title="Welcome to Serena",
+          tabPanel("Introduction",
+          p("Serena is a shiny application for analyzing and displaying data coming from a company database.",br(),
+          "Serena has been designed to handle 3 user-specific type of data:",br(),
+          br(),
+          "- Employees data",br(),
+          "- Specialized practitioners data",br(),
+          "-Technical administrators data",br(),
+          br(),
+          "The aim of Serena is to provide a user-friendly interface to visualize data regarding temporal trends of specific biological parameters"
+          )
+        ),
+        tabPanel("1 Upload your data",
+        p("In order to use Serena you have to click on the sidebar menu and choose your section.",br(),
+        "You will then be presented to the main page of the section. In this section you will notice a box where you will be asked to upload your data.",br(),
+        "Locate your data in your computer and upload it to Serena."
+      )
+    ),
+      tabPanel("2 Visualize your data",
+      p("As soon as your data will be uploaded, you will be able to visualize different temporal trends and plots regarding your parameter")
+    ),
+    tabPanel("3 HEy use MS",
+  includeMarkdown("README.md"))
+
+      )
+        )
+
+      )
+
+    )
+,
+
 
       ###### MEDIC ##########
     tabItem(tabName = "SP",
@@ -251,6 +288,7 @@ server <- shinyServer(function(input, output, session) {
       return(mydata)
 
       })
+
 
 
 
