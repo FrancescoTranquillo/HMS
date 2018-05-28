@@ -35,7 +35,7 @@ Sidebar<-dashboardSidebar(
     menuItem(tags$strong("Welcome"), tabName="Welcomepage", icon=icon("home"), selected= TRUE),
     menuItem(tags$b("Employee"), tabName= "Employee", icon=icon("user")),
     menuItem(tags$b("Specialized Practitioner"), tabName= "SP", icon = icon("user-md")),
-    menuItem(tags$b("Technical Administrator"), tabName="guide", icon=icon("info-circle")),
+    menuItem(tags$b("Technical Administrator"), tabName="TA", icon=icon("info-circle")),
     menuItem(tags$b("Source code"), icon = icon("file-code-o"), href = "https://github.com/FrancescoTranquillo/Serena"),
     tags$img(src="logo2.png", height="auto",width="auto")
   )
@@ -219,7 +219,42 @@ body<-dashboardBody(
             )
     )
 
+,
+    #### TECHNICAL ADMIN #####
+    tabItem(tabName = "TA",
+    h2(
+      icon("gear"),
+      tags$b("Users data visualization")
+    ),
+    #####FIRST ROW#####
+    fluidRow(
+
+      box( title = strong("Upload your file here"),
+           solidHeader = TRUE, status = "success", background = "green",
+
+
+           fileInput("file3", label = NULL, accept = c("text/csv","text/comma-separated-values,text/plain",".csv"))
+
+
+
+      ),
+      box( title = strong("Help me"),
+           solidHeader = TRUE, status = "warning", collapsible = TRUE, collapsed = TRUE,
+
+           "Serena accepts only files with a", strong(".csv"),"extension. To upload a file, click on the Browse button on the left and select your file from your computer.",
+           br(),
+           br(),
+           "Too slow?",
+           br(),
+           "Serena supports Drag&Drop feature! Drag your file and drop it in the Browse button!",
+           br(),
+           br(),
+           "When the file will be uploaded, you can expand the next boxto visualize and interact with your data"
+      )
+    )
+
   )
+)
 )
 
 
