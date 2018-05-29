@@ -18,6 +18,7 @@ library (ggplot2)
 library (plotly)
 library(reshape2)
 library(data.table)
+library(dplyr)
 
 
 
@@ -55,10 +56,8 @@ body<-dashboardBody(
 
                             ),
                             tabPanel("1 Upload your data",
-                                     p("In order to use Serena you have to click on the sidebar menu and choose your section.",br(),
-                                       "You will then be presented to the main page of the section. In this section you will notice a box where you will be asked to upload your data.",br(),
-                                       "Locate your data in your computer and upload it to Serena."
-                                     )
+                            includeMarkdown("2)visualize.md")
+                                    
                             ),
                             tabPanel("2 Visualize your data",
                                      p("As soon as your data will be uploaded, you will be able to visualize different temporal trends and plots regarding your parameter")
@@ -275,7 +274,9 @@ server <- shinyServer(function(input, output, session) {
 
     df <- read.csv(inFile$datapath, header = TRUE, sep = ";")
 
+
     df$Dates<- as.Date(df$Dates, format="%d/%m/%Y")
+    #transmute(Dates = as.Date(Dates, format = '%d/%m/%Y'))
 
     updateSelectInput(session, inputId = 'ycol', label = 'Choose the desired parameter:',
                       choices=names(df[-c(1,2,3)]),selected=names(df[-c(1,2,3)]))
