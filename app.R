@@ -51,15 +51,8 @@ body<-dashboardBody(
                      tabBox(width=12,
                             title="Welcome to Serena",
                             tabPanel("Introduction",
-                                     p("Serena is a shiny application for analyzing and displaying data coming from a company database.",br(),
-                                       "Serena has been designed to handle 3 user-specific type of data:",br(),
-                                       br(),
-                                       "- Employees data",br(),
-                                       "- Specialized practitioners data",br(),
-                                       "-Technical administrators data",br(),
-                                       br(),
-                                       "The aim of Serena is to provide a user-friendly interface to visualize data regarding temporal trends of specific biological parameters"
-                                     )
+                                    includeMarkdown("Introduction.md")
+
                             ),
                             tabPanel("1 Upload your data",
                                      p("In order to use Serena you have to click on the sidebar menu and choose your section.",br(),
