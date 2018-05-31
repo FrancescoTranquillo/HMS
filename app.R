@@ -237,7 +237,7 @@ server <- shinyServer(function(input, output, session) {
     inFile <- input$file1
 
 
-    df <- read.csv(inFile$datapath, header = TRUE, sep = ";")
+    df <- read.csv(inFile$datapath, header = TRUE, sep = ";", dec=",")
 
 
     df$Date<- as.Date(df$Date, format="%d/%m/%Y")
@@ -246,6 +246,11 @@ server <- shinyServer(function(input, output, session) {
     updateSelectInput(session, inputId = 'ycol', label = 'Choose the desired parameter:',
                       choices=names(df[-c(1,2,3)]),selected=names(df[-c(1,2,3)]))
 
+
+
+for(i in 1:ncol(df)){
+df[is.na(df[,i]), i] <- mean(df[,i], na.rm = TRUE)
+}
 
 
     #!!!!!
@@ -264,7 +269,7 @@ server <- shinyServer(function(input, output, session) {
 
     inFile <- input$file1
 
-    df <- read.csv(inFile$datapath, header = TRUE, sep = ";")
+    df <- read.csv(inFile$datapath, header = TRUE, sep = ";", dec=",")
 
     df$Date<- as.Date(df$Date, "%d/%m/%Y")
 
@@ -284,6 +289,10 @@ server <- shinyServer(function(input, output, session) {
 
     library(data.table)
     mydata<-as.data.frame(df)
+
+    for(i in 1:ncol(mydata)){
+  mydata[is.na(mydata[,i]), i] <- mean(mydata[,i], na.rm = TRUE)
+}
     return(mydata)
 
   })
@@ -297,7 +306,12 @@ server <- shinyServer(function(input, output, session) {
     req(input$file2)
     inFile2 <- input$file2
 
-    df2<-read.csv(inFile2$datapath, sep = ";", header= TRUE)
+    df2<-read.csv(inFile2$datapath, sep = ";", header= TRUE, dec=",")
+
+    for(i in 1:ncol(df2)){
+    df2[is.na(df2[,i]), i] <- mean(df2[,i], na.rm = TRUE)
+    }
+
 
 
     df2$Date<-as.Date(df2$Date, format="%d/%m/%Y")
@@ -310,7 +324,7 @@ server <- shinyServer(function(input, output, session) {
     names(dfmelted)[3]<-'Value'
     #dfmelted[dfmelted==""]<-NA
     dfmelted<-na.omit(dfmelted)
-    
+
     #!!!!!!!
     return(dfmelted)
 
@@ -321,7 +335,7 @@ server <- shinyServer(function(input, output, session) {
 
     req(input$file2)
     inFile2<-input$file2
-    df2<-read.csv(inFile2$datapath, sep = ";", header= TRUE)
+    df2<-read.csv(inFile2$datapath, sep = ";", header= TRUE, dec=",")
 
 
     df2$Date<-as.Date(df2$Date, format="%d/%m/%Y")
@@ -331,7 +345,9 @@ server <- shinyServer(function(input, output, session) {
     updateSelectInput(session, inputId = "Parameter", label="Select a parameter:",
                       choices=names(df2[,-1]),selected=names(df2[,-1]))
 
-    df2<-na.omit(df2)
+                      for(i in 1:ncol(df2)){
+                    df2[is.na(df2[,i]), i] <- mean(df2[,i], na.rm = TRUE)
+                  }
     return(df2)
   })
 
@@ -415,7 +431,7 @@ server <- shinyServer(function(input, output, session) {
   #####PLOT E1####
   output$plot2 = renderPlotly({
 
-    ggplotly(ggplot(data2(), aes(x=Date, y=Value, color=Parameter, group=Parameter))
+    ggplotly(ggplot(data2(), aes(x=Date, y=Value, color=Parameter))
 
              +geom_line()
              # +geom_hline(stat="identity", aes(yintercept=50), show.legend = TRUE)
