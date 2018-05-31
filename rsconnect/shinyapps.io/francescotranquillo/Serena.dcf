@@ -5,9 +5,9 @@ account: francescotranquillo
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 348276
-bundleId: 1403453
+bundleId: 1403491
 url: https://francescotranquillo.shinyapps.io/Serena/
-when: 1527800375.4906
+when: 1527801381.7697
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: Lotus.accdb|dummy data/data.csv|dummy data/data2.csv
+ignoredFiles: 3)all|Lotus.accdb|dummy data/data.csv|dummy data/data2.csv

@@ -61,8 +61,8 @@ body<-dashboardBody(
                             tabPanel("2 Visualize your data",
                                      includeMarkdown("2)visualize.md")
                             ),
-                            tabPanel("3 HEy use MS",
-                                     includeMarkdown("README.md"))
+                            tabPanel("3 That's all!",
+                                     includeMarkdown("3)all.md"))
 
                      )
               )
