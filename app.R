@@ -19,7 +19,7 @@ library (plotly)
 library(reshape2)
 library(data.table)
 library(dplyr)
-library(rmarkdown)
+#library(rmarkdown)
 
 
   ## 2) Titles-----
@@ -301,13 +301,16 @@ server <- shinyServer(function(input, output, session) {
 
 
     df2$Date<-as.Date(df2$Date, format="%d/%m/%Y")
+    #df2[df2==""]<-NA
 
 
     dfmelted<-melt(df2, id.vars = c('Date'))
 
     names(dfmelted)[2]<-'Parameter'
     names(dfmelted)[3]<-'Value'
+    #dfmelted[dfmelted==""]<-NA
     dfmelted<-na.omit(dfmelted)
+    
     #!!!!!!!
     return(dfmelted)
 
@@ -412,7 +415,7 @@ server <- shinyServer(function(input, output, session) {
   #####PLOT E1####
   output$plot2 = renderPlotly({
 
-    ggplotly(ggplot(data2(), aes(x=Date, y=Value, color=Parameter))
+    ggplotly(ggplot(data2(), aes(x=Date, y=Value, color=Parameter, group=Parameter))
 
              +geom_line()
              # +geom_hline(stat="identity", aes(yintercept=50), show.legend = TRUE)
