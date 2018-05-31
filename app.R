@@ -19,7 +19,7 @@ library (plotly)
 library(reshape2)
 library(data.table)
 library(dplyr)
-#library(rmarkdown)
+library(rmarkdown)
 
 
   ## 2) Titles-----
