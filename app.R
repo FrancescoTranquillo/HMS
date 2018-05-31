@@ -240,7 +240,7 @@ server <- shinyServer(function(input, output, session) {
     df <- read.csv(inFile$datapath, header = TRUE, sep = ";")
 
 
-    df$Dates<- as.Date(df$Dates, format="%d/%m/%Y")
+    df$Date<- as.Date(df$Date, format="%d/%m/%Y")
     #transmute(Dates = as.Date(Dates, format = '%d/%m/%Y'))
 
     updateSelectInput(session, inputId = 'ycol', label = 'Choose the desired parameter:',
@@ -266,7 +266,7 @@ server <- shinyServer(function(input, output, session) {
 
     df <- read.csv(inFile$datapath, header = TRUE, sep = ";")
 
-    df$Dates<- as.Date(df$Dates, "%d/%m/%Y")
+    df$Date<- as.Date(df$Date, "%d/%m/%Y")
 
     df[2]<-NULL
     #extraction of employee
@@ -399,7 +399,7 @@ server <- shinyServer(function(input, output, session) {
 
 
     #plotly formatting
-    ggplotly(ggplot(data1(), aes_string( x="Dates" , y=input$ycol, color="Employee"  ))
+    ggplotly(ggplot(data1(), aes_string( x="Date" , y=input$ycol, color="Employee"  ))
              +geom_line(size="0.7")
              +geom_point(size="2")
              +xlab("Time")
@@ -484,7 +484,7 @@ server <- shinyServer(function(input, output, session) {
         return(cases)
     })
 
-    ggplotly(ggplot(selecteddata(), aes_string("Dates", input$Parameter2))
+    ggplotly(ggplot(selecteddata(), aes_string("Date", input$Parameter2))
              +geom_point(aes(color=abnormals()))
              +geom_line()
              +theme(legend.position='none')
